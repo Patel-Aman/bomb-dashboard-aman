@@ -34,6 +34,8 @@ import useHarvestFromBoardroom from '../../hooks/useHarvestFromBoardroom';
 import useClaimRewardCheck from '../../hooks/boardroom/useClaimRewardCheck';
 import useWithdrawCheck from '../../hooks/boardroom/useWithdrawCheck';
 import useRedeemOnBoardroom from '../../hooks/useRedeemOnBoardroom';
+import useBanks from '../../hooks/useBanks';
+import Pools from './components/pools';
 
 const BackgroundImage = createGlobalStyle`
   body {
@@ -54,7 +56,9 @@ function Dashboard() {
   //   pools[pool.poolId] = pool;
   // }
   // console.log(pools);
+  const [banks] = useBanks();
 
+  const activeBanks = banks.filter((bank) => !bank.finished);
   const bombFinance = useBombFinance();
   const bombStats = useBombStats();
   const bShareStats = usebShareStats();
@@ -309,7 +313,6 @@ function Dashboard() {
               </Button>
             </Grid>
           </Grid>
-          {/* here */}
           <Card style={{ padding: '2vw', margin: '2vh' }}>
             <img src="" alt="" />
             <Grid container spacing={3}>
@@ -354,9 +357,6 @@ function Dashboard() {
                 >
                   Withdraw
                 </Button>
-                {/* <Button variant="contained" style={{ marginLeft: '10px', marginBottom: '5px' }}>
-                  {'Withdraw >>>'}
-                </Button> */}
                 <Button
                   onClick={onReward}
                   className={earnings.eq(0) || !canClaimReward ? 'shinyButtonDisabled' : 'shinyButton'}
@@ -385,117 +385,13 @@ function Dashboard() {
 
         <Button variant="contained">Claim All</Button>
 
-        {/* <div>
-          <div>
-            <h3>
-              {bank.name} <small className="recommended">Recommended</small>
-            </h3>
-            <p className="right">TVL: ${statsOnPool.TVL ? statsOnPool.TVL : '--'}</p>
-          </div>
-          <Divider />
-
-          <Grid container spacing={2}>
-            <Grid item md={2}>
-              Daily Returns: {statsOnPool.dailyAPR ? '0.00' : statsOnPool.dailyAPR}%
-            </Grid>
-            <Grid item md={2}>
-              Your Stake: 6.0000 ≈ $1171.62
-            </Grid>
-            <Grid item md={2}>
-              Earned: 1660.4413 ≈ {`≈ $${earnedInDollars}`}
-            </Grid>
-
-            <Grid item md={6}>
-              <Button variant="contained" style={{ marginLeft: '10px', marginBottom: '5px' }}>
-                {'Deposit >>>'}
-              </Button>
-              <Button variant="contained" style={{ marginLeft: '10px', marginBottom: '5px' }}>
-                {'Withdraw >>>'}
-              </Button>
-              <Button variant="contained" style={{ marginLeft: '10px', marginBottom: '5px' }}>
-                {'Claim Rewards >>>'}
-              </Button>
-            </Grid>
-          </Grid>
-        </div> */}
-        {/* {activeBanks
+        {activeBanks
           .filter((bank) => bank.sectionInUI === 3)
           .map((bank) => (
-            // <React.Fragment key={bank.name}>
-            //   <FarmCard bank={bank} />
-            // </React.Fragment>
-          ))} */}
-
-        <div>
-          <div>
-            <TokenSymbol size={32} symbol="BOMB-BTCB-LP" />
-            <span>
-              BOMB-BTCB <small className="recommended">Recommended</small>
-            </span>
-            <p className="right">TVL: $26354</p>
-          </div>
-          <Divider />
-
-          <Grid container spacing={2}>
-            <Grid item md={2}>
-              Daily Returns: 2%
-            </Grid>
-            <Grid item md={2}>
-              Your Stake: 6.0000 ≈ $1171.62
-            </Grid>
-            <Grid item md={2}>
-              Earned: 1660.4413 ≈ $298.88
-            </Grid>
-
-            <Grid item md={6}>
-              <Button variant="contained" style={{ marginLeft: '10px', marginBottom: '5px' }}>
-                {'Deposit >>>'}
-              </Button>
-              <Button variant="contained" style={{ marginLeft: '10px', marginBottom: '5px' }}>
-                {'Withdraw >>>'}
-              </Button>
-              <Button variant="contained" style={{ marginLeft: '10px', marginBottom: '5px' }}>
-                {'Claim Rewards >>>'}
-              </Button>
-            </Grid>
-          </Grid>
-        </div>
-        <Divider />
-
-        <div>
-          <img src="" alt="" />
-          <div>
-            <h3 className="left">
-              BSHARE-BNB <span className="recommended">Recommended</span>
-            </h3>
-            <p className="right">TVL: $1,008,430</p>
-          </div>
-          <Divider />
-
-          <Grid container spacing={2}>
-            <Grid item md={2}>
-              Daily Returns: 2%
-            </Grid>
-            <Grid item md={2}>
-              Your Stake: 6.0000 ≈ $1171.62
-            </Grid>
-            <Grid item md={2}>
-              Earned: 1660.4413 ≈ $298.88
-            </Grid>
-
-            <Grid item md={6}>
-              <Button variant="contained" style={{ marginLeft: '10px', marginBottom: '5px' }}>
-                {'Deposit >>>'}
-              </Button>
-              <Button variant="contained" style={{ marginLeft: '10px', marginBottom: '5px' }}>
-                {'Withdraw >>>'}
-              </Button>
-              <Button variant="contained" style={{ marginLeft: '10px', marginBottom: '5px' }}>
-                {'Claim Rewards >>>'}
-              </Button>
-            </Grid>
-          </Grid>
-        </div>
+            <React.Fragment key={bank.name}>
+              <Pools bank={bank} />
+            </React.Fragment>
+          ))}
       </Card>
 
       {/* Bonds */}
