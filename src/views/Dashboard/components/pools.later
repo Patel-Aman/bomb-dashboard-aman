@@ -1,0 +1,84 @@
+import React, { useEffect } from 'react';
+import styled from 'styled-components';
+
+import { useParams } from 'react-router-dom';
+import { useWallet } from 'use-wallet';
+import { makeStyles } from '@material-ui/core/styles';
+
+import { Box, Button, Card, CardContent, Divider, Grid } from '@material-ui/core';
+
+import PageHeader from '../../../components/PageHeader';
+import Spacer from '../../../components/Spacer';
+import UnlockWallet from '../../../components/UnlockWallet';
+import Harvest from '../../Bank/components/Harvest';
+import Stake from '../../Stake';
+import useBank from '../../../hooks/useBank';
+import useStatsForPool from '../../../hooks/useStatsForPool';
+import useRedeem from '../../../hooks/useRedeem';
+import { Bank as BankEntity } from '../../../bomb-finance';
+import useBombFinance from '../../../hooks/useBombFinance';
+import { Alert } from '@material-ui/lab';
+//import { bankDefinitions } from '../../config';
+import { Bank } from '../../../bomb-finance';
+
+const useStyles = makeStyles((theme) => ({
+  gridItem: {
+    height: '100%',
+    [theme.breakpoints.up('md')]: {
+      height: '90px',
+    },
+  },
+}));
+
+interface PoolsProps {
+  bank: Bank;
+}
+
+const Pools: React.FC<PoolsProps> = ({ bank }) => {
+  const classes = useStyles();
+
+  const { account } = useWallet();
+  const { onRedeem } = useRedeem(bank);
+
+  let statsOnPool = useStatsForPool(bank);
+
+  return (
+    <>
+      <div>
+        <div>
+          <h3>
+            {bank.name} <small className="recommended">Recommended</small>
+          </h3>
+          <p className="right">TVL: ${statsOnPool.TVL ? statsOnPool.TVL : '--'}</p>
+        </div>
+        <Divider />
+
+        <Grid container spacing={2}>
+          <Grid item md={2}>
+            Daily Returns: {statsOnPool.dailyAPR ? '0.00' : statsOnPool.dailyAPR}%
+          </Grid>
+          <Grid item md={2}>
+            Your Stake: 6.0000 ≈ $1171.62
+          </Grid>
+          <Grid item md={2}>
+            {/* Earned: 1660.4413 ≈ {`≈ $${earnedInDollars}`} */}
+          </Grid>
+
+          <Grid item md={6}>
+            <Button variant="contained" style={{ marginLeft: '10px', marginBottom: '5px' }}>
+              {'Deposit >>>'}
+            </Button>
+            <Button variant="contained" style={{ marginLeft: '10px', marginBottom: '5px' }}>
+              {'Withdraw >>>'}
+            </Button>
+            <Button variant="contained" style={{ marginLeft: '10px', marginBottom: '5px' }}>
+              {'Claim Rewards >>>'}
+            </Button>
+          </Grid>
+        </Grid>
+      </div>
+    </>
+  );
+};
+
+export default Pools;

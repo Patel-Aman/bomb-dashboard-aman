@@ -1,0 +1,19 @@
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&family=Roboto:wght@300&display=swap');
+.align-left {
+    margin-right: 80%;
+}
+
+.recommended {
+    font-family: 'Nunito';
+    font-style: normal;
+    font-weight: 600;
+    font-size: 12px;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    padding: 3px;
+    color: #ffffff;
+
+    background: rgba(0, 232, 162, 0.5);
+    border-radius: 3px;
+}

@@ -23,6 +23,17 @@ import useTotalValueLocked from '../../hooks/useTotalValueLocked';
 import { Helmet } from 'react-helmet';
 import HomeImage from '../../assets/img/background.jpg';
 import { ReactComponent as IconDiscord } from '../../assets/img/discord.svg';
+// import useStatsForPool from '../../hooks/useStatsForPool';
+// import useBanks from '../../hooks/useBanks';
+// import useRedeem from '../../hooks/useRedeem';
+import useTotalStakedOnBoardroom from '../../hooks/useTotalStakedOnBoardroom';
+import useEarningsOnBoardroom from '../../hooks/useEarningsOnBoardroom';
+import useStakedBalanceOnBoardroom from '../../hooks/useStakedBalanceOnBoardroom';
+import useStakedTokenPriceInDollars from '../../hooks/useStakedTokenPriceInDollars';
+import useHarvestFromBoardroom from '../../hooks/useHarvestFromBoardroom';
+import useClaimRewardCheck from '../../hooks/boardroom/useClaimRewardCheck';
+import useWithdrawCheck from '../../hooks/boardroom/useWithdrawCheck';
+import useRedeemOnBoardroom from '../../hooks/useRedeemOnBoardroom';
 
 const BackgroundImage = createGlobalStyle`
   body {
@@ -35,6 +46,15 @@ const BackgroundImage = createGlobalStyle`
 const TITLE = 'bomb.money | Dashboard';
 
 function Dashboard() {
+  // const [banks] = useBanks();
+  // const activeBanks = banks.filter((bank) => !bank.finished);
+  // let pools = {};
+
+  // for (let pool of activeBanks) {
+  //   pools[pool.poolId] = pool;
+  // }
+  // console.log(pools);
+
   const bombFinance = useBombFinance();
   const bombStats = useBombStats();
   const bShareStats = usebShareStats();
@@ -43,6 +63,20 @@ function Dashboard() {
   const cashStat = useCashPriceInEstimatedTWAP();
   const bondStat = useBondStats();
   const bondsPurchasable = useBondsPurchasable();
+  const totalStaked = useTotalStakedOnBoardroom();
+  const earnings = useEarningsOnBoardroom();
+  const stakedBalance = useStakedBalanceOnBoardroom();
+
+  const { onReward } = useHarvestFromBoardroom();
+  const { onRedeem } = useRedeemOnBoardroom();
+  const canClaimReward = useClaimRewardCheck();
+  const canWithdraw = useWithdrawCheck();
+
+  // console.log(pools[1]);
+  // const statsOnPool_BombBtcb = useStatsForPool(pools[1]);
+  // console.log(statsOnPool_BombBtcb);
+  // const redeem = useRedeem(pools[1]);
+  // console.log('redeem' + redeem);
 
   const currentEpoch = useCurrentEpoch();
   const { to } = useTreasuryAllocationTimes();
@@ -80,6 +114,22 @@ function Dashboard() {
     () => (bShareStats ? Number(bShareStats.tokenInFtm).toFixed(4) : null),
     [bShareStats],
   );
+  const tokenPriceInDollars = useMemo(
+    () => (bombStats ? Number(bombStats.priceInDollars).toFixed(2) : null),
+    [bombStats],
+  );
+
+  const stakedTokenPriceInDollars = useStakedTokenPriceInDollars('BSHARE', bombFinance.BSHARE);
+
+  const tokenPriceInDollarsStake = useMemo(
+    () =>
+      stakedTokenPriceInDollars
+        ? (Number(stakedTokenPriceInDollars) * Number(getDisplayBalance(stakedBalance))).toFixed(2).toString()
+        : null,
+    [stakedTokenPriceInDollars, stakedBalance],
+  );
+
+  const earnedInDollars = (Number(tokenPriceInDollars) * Number(getDisplayBalance(earnings))).toFixed(2);
 
   return (
     <Page>
@@ -186,13 +236,12 @@ function Dashboard() {
                 </TableContainer>
               </Grid>
 
-              {/* here */}
               <Grid item md={4}>
                 <p>Current Epoch</p>
                 <h2>{Number(currentEpoch)}</h2>
                 <Divider />
                 <p>Next Epoch in</p>
-                <Card>
+                <Card className="align-left">
                   <ProgressCountdown base={moment().toDate()} hideBar={true} deadline={to} description="Next Epoch" />
                 </Card>
                 <Divider />
@@ -260,7 +309,7 @@ function Dashboard() {
               </Button>
             </Grid>
           </Grid>
-
+          {/* here */}
           <Card style={{ padding: '2vw', margin: '2vh' }}>
             <img src="" alt="" />
             <Grid container spacing={3}>
@@ -278,7 +327,7 @@ function Dashboard() {
             </Grid>
 
             <Box style={{ textAlign: 'end' }}>
-              Total Staked: <img src="" alt="" /> 7232
+              Total Staked: <img src="" alt="" /> {getDisplayBalance(totalStaked)}
             </Box>
 
             <Grid container spacing={2}>
@@ -286,21 +335,34 @@ function Dashboard() {
                 Daily Returns: 2%
               </Grid>
               <Grid item md={2}>
-                Your Stake: 6.0000 ≈ $1171.62
+                Your Stake: {`${getDisplayBalance(stakedBalance)} ≈ ${tokenPriceInDollarsStake}`}
               </Grid>
               <Grid item md={2}>
-                Earned: 1660.4413 ≈ $298.88
+                Earned: {`${getDisplayBalance(earnings)} ≈ ${earnedInDollars}`}
               </Grid>
 
               <Grid item md={6}>
                 <Button variant="contained" style={{ marginLeft: '10px', marginBottom: '5px' }}>
                   {'Deposit >>>'}
                 </Button>
-                <Button variant="contained" style={{ marginLeft: '10px', marginBottom: '5px' }}>
-                  {'Withdraw >>>'}
+                <Button
+                  disabled={stakedBalance.eq(0) || !canWithdraw}
+                  onClick={onRedeem}
+                  className={
+                    stakedBalance.eq(0) || !canWithdraw ? 'shinyButtonDisabledSecondary' : 'shinyButtonSecondary'
+                  }
+                >
+                  Withdraw
                 </Button>
-                <Button variant="contained" style={{ marginLeft: '10px', marginBottom: '5px', width: '100%' }}>
-                  {'Claim Rewards >>>'}
+                {/* <Button variant="contained" style={{ marginLeft: '10px', marginBottom: '5px' }}>
+                  {'Withdraw >>>'}
+                </Button> */}
+                <Button
+                  onClick={onReward}
+                  className={earnings.eq(0) || !canClaimReward ? 'shinyButtonDisabled' : 'shinyButton'}
+                  disabled={earnings.eq(0) || !canClaimReward}
+                >
+                  Claim Reward
                 </Button>
               </Grid>
             </Grid>
@@ -323,13 +385,54 @@ function Dashboard() {
 
         <Button variant="contained">Claim All</Button>
 
-        <div>
-          <img src="" alt="" />
+        {/* <div>
           <div>
-            <h3 className="left">
-              BOMB-BTCB <small className="recommended">Recommended</small>
+            <h3>
+              {bank.name} <small className="recommended">Recommended</small>
             </h3>
-            <p className="right">TVL: $1,008,430</p>
+            <p className="right">TVL: ${statsOnPool.TVL ? statsOnPool.TVL : '--'}</p>
+          </div>
+          <Divider />
+
+          <Grid container spacing={2}>
+            <Grid item md={2}>
+              Daily Returns: {statsOnPool.dailyAPR ? '0.00' : statsOnPool.dailyAPR}%
+            </Grid>
+            <Grid item md={2}>
+              Your Stake: 6.0000 ≈ $1171.62
+            </Grid>
+            <Grid item md={2}>
+              Earned: 1660.4413 ≈ {`≈ $${earnedInDollars}`}
+            </Grid>
+
+            <Grid item md={6}>
+              <Button variant="contained" style={{ marginLeft: '10px', marginBottom: '5px' }}>
+                {'Deposit >>>'}
+              </Button>
+              <Button variant="contained" style={{ marginLeft: '10px', marginBottom: '5px' }}>
+                {'Withdraw >>>'}
+              </Button>
+              <Button variant="contained" style={{ marginLeft: '10px', marginBottom: '5px' }}>
+                {'Claim Rewards >>>'}
+              </Button>
+            </Grid>
+          </Grid>
+        </div> */}
+        {/* {activeBanks
+          .filter((bank) => bank.sectionInUI === 3)
+          .map((bank) => (
+            // <React.Fragment key={bank.name}>
+            //   <FarmCard bank={bank} />
+            // </React.Fragment>
+          ))} */}
+
+        <div>
+          <div>
+            <TokenSymbol size={32} symbol="BOMB-BTCB-LP" />
+            <span>
+              BOMB-BTCB <small className="recommended">Recommended</small>
+            </span>
+            <p className="right">TVL: $26354</p>
           </div>
           <Divider />
 
