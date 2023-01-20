@@ -24,7 +24,6 @@ import useStake from '../../../hooks/useStake';
 import useZap from '../../../hooks/useZap';
 import useTokenBalance from '../../../hooks/useTokenBalance';
 import { useContext } from 'react';
-import styled from 'styled-components';
 import useRedeem from '../../../hooks/useRedeem';
 
 interface PoolsProps {
@@ -150,14 +149,13 @@ const Pools: React.FC<PoolsProps> = ({ bank }) => {
                   variant="contained"
                   style={{ marginTop: '20px' }}
                 >
-                  DIPOSIT
+                  DEPOSIT
                 </Button>
               ) : (
                 <>
                   <IconButton onClick={onPresentWithdraw}>
                     <RemoveIcon />
                   </IconButton>
-                  <StyledActionSpacer />
                   <IconButton
                     disabled={
                       bank.closedForStaking ||
@@ -173,7 +171,6 @@ const Pools: React.FC<PoolsProps> = ({ bank }) => {
                   >
                     <FlashOnIcon style={{ color: themeColor.grey[400] }} />
                   </IconButton>
-                  <StyledActionSpacer />
                   <IconButton
                     disabled={bank.closedForStaking}
                     onClick={() => (bank.closedForStaking ? null : onPresentDeposit())}
@@ -197,17 +194,5 @@ const Pools: React.FC<PoolsProps> = ({ bank }) => {
     </>
   );
 };
-
-const StyledCardActions = styled.div`
-  display: flex;
-  justify-content: center;
-  margin-top: 28px;
-  width: 100%;
-`;
-
-const StyledActionSpacer = styled.div`
-  height: ${(props) => props.theme.spacing[4]}px;
-  width: ${(props) => props.theme.spacing[4]}px;
-`;
 
 export default Pools;

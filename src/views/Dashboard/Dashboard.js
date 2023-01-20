@@ -1,6 +1,6 @@
 import './Dashboard.css';
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useCallback } from 'react';
 import Page from '../../components/Page';
 import { createGlobalStyle } from 'styled-components';
 import TokenSymbol from '../../components/TokenSymbol';
@@ -36,6 +36,16 @@ import useWithdrawCheck from '../../hooks/boardroom/useWithdrawCheck';
 import useRedeemOnBoardroom from '../../hooks/useRedeemOnBoardroom';
 import useBanks from '../../hooks/useBanks';
 import Pools from './components/pools';
+import useCashPriceInLastTWAP from '../../hooks/useCashPriceInLastTWAP'; // maybe important later
+import { BOND_REDEEM_PRICE, BOND_REDEEM_PRICE_BN } from '../../bomb-finance/constants';
+import { useTransactionAdder } from '../../state/transactions/hooks';
+import useTokenBalance from '../../hooks/useTokenBalance';
+import useWallet from 'use-wallet';
+import useApprove, { ApprovalState } from '../../hooks/useApprove';
+import UnlockWallet from '../../components/UnlockWallet';
+import useCatchError from '../../hooks/useCatchError';
+import useModal from '../../hooks/useModal';
+import ExchangeModal from '../Bond/components/ExchangeModal';
 
 const BackgroundImage = createGlobalStyle`
   body {
@@ -48,25 +58,73 @@ const BackgroundImage = createGlobalStyle`
 const TITLE = 'bomb.money | Dashboard';
 
 function Dashboard() {
-  // const [banks] = useBanks();
-  // const activeBanks = banks.filter((bank) => !bank.finished);
-  // let pools = {};
+  // here
+  const bombFinance = useBombFinance();
+  const bondsPurchasable = useBondsPurchasable();
+  const bondStat = useBondStats();
+  const isBondPurchasable = useMemo(() => Number(bondStat?.tokenInFtm) < 1.01, [bondStat]);
+  const {
+    contracts: { Treasury },
+  } = useBombFinance();
+  const bondBalance = useTokenBalance(bombFinance?.BBOND);
+  const { account } = useWallet();
+  const [approveStatus, approve] = useApprove(bombFinance.BOMB, Treasury.address);
+  const catchError = useCatchError();
+  const balance = useTokenBalance(bombFinance.BBOND);
 
-  // for (let pool of activeBanks) {
-  //   pools[pool.poolId] = pool;
-  // }
-  // console.log(pools);
+  let [onPresent, onDismiss] = useModal(
+    <ExchangeModal
+      title="Purchase"
+      description={
+        !isBondPurchasable
+          ? 'BOMB is over peg'
+          : getDisplayBalance(bondsPurchasable, 18, 4) + ' BBOND available for purchase'
+      }
+      max={balance}
+      onConfirm={(value) => {
+        handleRedeemBonds(value);
+        onDismiss();
+      }}
+      action="Purchase"
+      tokenName="BOMB"
+    />,
+  );
+  const onPresentPurchase = onPresent;
+
+  [onPresent, onDismiss] = useModal(
+    <ExchangeModal
+      title="Redeem"
+      description={`${getDisplayBalance(bondBalance)} BBOND Available in wallet`}
+      max={balance}
+      onConfirm={(value) => {
+        handleRedeemBonds(value);
+        onDismiss();
+      }}
+      action="Redeem"
+      tokenName="BBOND"
+    />,
+  );
+
   const [banks] = useBanks();
+  const cashPrice = useCashPriceInLastTWAP();
+  const addTransaction = useTransactionAdder();
+
+  const isBondRedeemable = useMemo(() => cashPrice.gt(BOND_REDEEM_PRICE_BN), [cashPrice]);
+
+  const handleRedeemBonds = useCallback(
+    async (amount) => {
+      const tx = await bombFinance.redeemBonds(amount);
+      addTransaction(tx, { summary: `Redeem ${amount} BBOND` });
+    },
+    [bombFinance, addTransaction],
+  );
 
   const activeBanks = banks.filter((bank) => !bank.finished);
-  const bombFinance = useBombFinance();
   const bombStats = useBombStats();
   const bShareStats = usebShareStats();
   const tBondStats = useBondStats();
   const TVL = useTotalValueLocked();
   const cashStat = useCashPriceInEstimatedTWAP();
-  const bondStat = useBondStats();
-  const bondsPurchasable = useBondsPurchasable();
   const totalStaked = useTotalStakedOnBoardroom();
   const earnings = useEarningsOnBoardroom();
   const stakedBalance = useStakedBalanceOnBoardroom();
@@ -75,12 +133,6 @@ function Dashboard() {
   const { onRedeem } = useRedeemOnBoardroom();
   const canClaimReward = useClaimRewardCheck();
   const canWithdraw = useWithdrawCheck();
-
-  // console.log(pools[1]);
-  // const statsOnPool_BombBtcb = useStatsForPool(pools[1]);
-  // console.log(statsOnPool_BombBtcb);
-  // const redeem = useRedeem(pools[1]);
-  // console.log('redeem' + redeem);
 
   const currentEpoch = useCurrentEpoch();
   const { to } = useTreasuryAllocationTimes();
@@ -422,9 +474,26 @@ function Dashboard() {
                 <div>Purchase BBond Bomb is over peg</div>
               </Grid>
               <Grid item md={12}>
-                <Button>
-                  Purchase <img src="" alt="" />
-                </Button>
+                {/* hello */}
+                {!!account ? (
+                  <>
+                    {approveStatus !== ApprovalState.APPROVED ? (
+                      <Button
+                        className="shinyButton"
+                        disabled={approveStatus === ApprovalState.PENDING || approveStatus === ApprovalState.UNKNOWN}
+                        onClick={() => catchError(approve(), `Unable to approve BOMB`)}
+                      >
+                        {`Approve BOMB`}
+                      </Button>
+                    ) : (
+                      <Button className="shinyButton" onClick={onPresentPurchase}>
+                        Purchase
+                      </Button>
+                    )}
+                  </>
+                ) : (
+                  <UnlockWallet />
+                )}
               </Grid>
             </Grid>
 
@@ -434,9 +503,32 @@ function Dashboard() {
                 <div>Redeem Bomb</div>
               </Grid>
               <Grid item md={12}>
-                <Button>
-                  Redeem <img src="" alt="" />
-                </Button>
+                {!!account ? (
+                  <>
+                    {approveStatus !== ApprovalState.APPROVED &&
+                    !(!bondStat || bondBalance.eq(0) || !isBondRedeemable) ? (
+                      <Button
+                        className="shinyButton"
+                        disabled={approveStatus === ApprovalState.PENDING || approveStatus === ApprovalState.UNKNOWN}
+                        onClick={() => catchError(approve(), `Unable to approve BBOND`)}
+                      >
+                        Approve BBOND
+                      </Button>
+                    ) : (
+                      <Button
+                        className={
+                          !bondStat || bondBalance.eq(0) || !isBondRedeemable ? 'shinyButtonDisabled' : 'shinyButton'
+                        }
+                        onClick={onPresent}
+                        disabled={!bondStat || bondBalance.eq(0) || !isBondRedeemable}
+                      >
+                        {!isBondRedeemable ? `Enabled when 10,000 BOMB > ${BOND_REDEEM_PRICE}BTC` : null || 'Reedem'}
+                      </Button>
+                    )}
+                  </>
+                ) : (
+                  <UnlockWallet />
+                )}
               </Grid>
             </Grid>
           </Grid>
