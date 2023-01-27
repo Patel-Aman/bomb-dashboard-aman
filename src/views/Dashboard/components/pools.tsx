@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 
-import { Button, Divider, Grid } from '@material-ui/core';
+import { Button, Grid } from '@material-ui/core';
 import { ThemeContext } from 'styled-components';
 
 import useStatsForPool from '../../../hooks/useStatsForPool';
@@ -25,6 +25,7 @@ import useZap from '../../../hooks/useZap';
 import useTokenBalance from '../../../hooks/useTokenBalance';
 import { useContext } from 'react';
 import useRedeem from '../../../hooks/useRedeem';
+import TokenSymbol from '../../../components/TokenSymbol';
 
 interface PoolsProps {
   bank: Bank;
@@ -110,23 +111,33 @@ const Pools: React.FC<PoolsProps> = ({ bank }) => {
   return (
     <>
       <div style={{ marginTop: '2vh' }}>
-        <div>
-          <span>
+        <Grid container>
+          <Grid item md={10}>
+            <TokenSymbol symbol={bank.depositTokenName} size={34}></TokenSymbol>
             {bank.depositTokenName} <small className="recommended">Recommended</small>
-          </span>
-          <p>TVL: ${statsOnPool?.TVL ? statsOnPool?.TVL : '--'}</p>
-        </div>
-        <Divider />
+          </Grid>
+          <Grid item md={2}>
+            TVL: ${statsOnPool?.TVL ? statsOnPool?.TVL : '--'}
+          </Grid>
+          <Grid item md={12}>
+            <hr className="hr-line" />
+          </Grid>
+        </Grid>
+        <Grid container spacing={4}>
+          <Grid item md={2}>
+            Daily Returns: <br /> {statsOnPool?.dailyAPR ? '0.00' : statsOnPool?.dailyAPR}%
+          </Grid>
 
-        <Grid container spacing={2}>
           <Grid item md={2}>
-            Daily Returns: {statsOnPool?.dailyAPR ? '0.00' : statsOnPool?.dailyAPR}%
+            Your Stake: <br />
+            <TokenSymbol symbol={bank.depositTokenName} size={22}></TokenSymbol>{' '}
+            {getDisplayBalance(stakedBalance, bank.depositToken.decimal)} <br /> {`≈ $${earnedInDollars}`}
           </Grid>
+
           <Grid item md={2}>
-            Your Stake: {getDisplayBalance(stakedBalance, bank.depositToken.decimal)} ≈ {`≈ $${earnedInDollars}`}
-          </Grid>
-          <Grid item md={2}>
-            Earned: {getDisplayBalance(earnings)} ≈ {`≈ $${earnedInDollarsEarned}`}
+            Earned:
+            <br /> <TokenSymbol symbol="BSHARE" size={22}></TokenSymbol> {getDisplayBalance(earnings)} <br />{' '}
+            {`≈ $${earnedInDollarsEarned}`}
           </Grid>
 
           <Grid item md={6}>
@@ -143,13 +154,11 @@ const Pools: React.FC<PoolsProps> = ({ bank }) => {
                     bank.closedForStaking ||
                     approveStatus === ApprovalState.PENDING ||
                     approveStatus === ApprovalState.UNKNOWN
-                      ? '' // active btn
-                      : '' // disable
+                      ? 'round-button' // active btn
+                      : 'round-button disbaled' // disable
                   }
-                  variant="contained"
-                  style={{ marginTop: '20px' }}
                 >
-                  DEPOSIT
+                  Deposit
                 </Button>
               ) : (
                 <>
@@ -179,15 +188,23 @@ const Pools: React.FC<PoolsProps> = ({ bank }) => {
                   </IconButton>
                 </>
               )}
+
+              <Button
+                onClick={onRedeem}
+                className={Number(earnedInDollars) > 0 ? 'round-button' : 'round-button disabled'}
+                disabled={Number(earnedInDollars) > 0 ? false : true}
+              >
+                Withdraw
+              </Button>
+
+              <Button
+                onClick={onRedeem}
+                className={Number(earnedInDollarsEarned) > 0 ? 'round-button' : 'round-button disabled'}
+                disabled={Number(earnedInDollarsEarned) > 0 ? false : true}
+              >
+                Claim Rewards <TokenSymbol symbol="BSHARE" size={22} />
+              </Button>
             </div>
-
-            <Button onClick={onRedeem} className="shinyButtonSecondary">
-              Withdraw
-            </Button>
-
-            <Button onClick={onRedeem} className="shinyButtonSecondary">
-              Claim
-            </Button>
           </Grid>
         </Grid>
       </div>

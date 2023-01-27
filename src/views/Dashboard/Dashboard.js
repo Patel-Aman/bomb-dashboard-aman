@@ -16,7 +16,7 @@ import useBondsPurchasable from '../../hooks/useBondsPurchasable';
 import { getDisplayBalance } from '../../utils/formatBalance';
 import useBombFinance from '../../hooks/useBombFinance';
 import useCashPriceInEstimatedTWAP from '../../hooks/useCashPriceInEstimatedTWAP';
-import ProgressCountdown from '../Boardroom/components/ProgressCountdown';
+import ProgressCountdown from './components/ProgressCountdown';
 import useTreasuryAllocationTimes from '../../hooks/useTreasuryAllocationTimes';
 import moment from 'moment';
 import useTotalValueLocked from '../../hooks/useTotalValueLocked';
@@ -46,6 +46,7 @@ import UnlockWallet from '../../components/UnlockWallet';
 import useCatchError from '../../hooks/useCatchError';
 import useModal from '../../hooks/useModal';
 import ExchangeModal from '../Bond/components/ExchangeModal';
+import useFetchBoardroomAPR from '../../hooks/useFetchBoardroomAPR';
 
 const BackgroundImage = createGlobalStyle`
   body {
@@ -128,6 +129,7 @@ function Dashboard() {
   const totalStaked = useTotalStakedOnBoardroom();
   const earnings = useEarningsOnBoardroom();
   const stakedBalance = useStakedBalanceOnBoardroom();
+  const boardroomAPR = useFetchBoardroomAPR();
 
   const { onReward } = useHarvestFromBoardroom();
   const { onRedeem } = useRedeemOnBoardroom();
@@ -196,30 +198,29 @@ function Dashboard() {
 
       <Grid container spacing={3}>
         <Grid item xs={12} sm={12}>
-          <Card style={{ padding: '2vw', margin: '2vh' }}>
-            <Box p={2} style={{ textAlign: 'center' }}>
+          <Card className="transparent-card">
+            <Box p={2} style={{ textAlign: 'center' }} className="line head">
               Bomb Finance Summary
             </Box>
-            <Divider />
 
-            <Grid container spacing={3}>
-              <Grid item md={8}>
+            <Grid container spacing={1}>
+              <Grid item md={6}>
                 <TableContainer>
                   <Table sx={{ minWidth: 650 }} aria-label="simple table">
                     <TableHead>
-                      <TableRow>
+                      <TableRow className="line">
                         <TableCell></TableCell>
-                        <TableCell align="right">Current Supply</TableCell>
-                        <TableCell align="right">Total Supply</TableCell>
-                        <TableCell align="right">Price</TableCell>
-                        <TableCell align="right"></TableCell>
+                        <TableCell className="line table-head">Current Supply</TableCell>
+                        <TableCell className="line table-head">Total Supply</TableCell>
+                        <TableCell className="line table-head">Price</TableCell>
+                        <TableCell></TableCell>
                       </TableRow>
                     </TableHead>
-                    <TableBody>
-                      <TableRow>
+                    <TableBody className="table-values">
+                      <TableRow className="line">
                         <TableCell component="th" scope="row">
-                          <TokenSymbol symbol="BOMB" style={{ height: '20px', width: '20px' }} />
-                          <span>BOMB</span>
+                          <TokenSymbol symbol="BOMB" size={32} />
+                          <span className="item">BOMB</span>
                         </TableCell>
                         <TableCell align="right">{roundAndFormatNumber(bombCirculatingSupply, 2)}</TableCell>
                         <TableCell align="right">{roundAndFormatNumber(bombTotalSupply, 2)}</TableCell>
@@ -240,16 +241,16 @@ function Dashboard() {
                           </Button>
                         </TableCell>
                       </TableRow>
-                      <TableRow>
+                      <TableRow className="line">
                         <TableCell component="th" scope="row">
-                          <TokenSymbol symbol="BSHARE" />
-                          <span>BSHARE</span>
+                          <TokenSymbol symbol="BSHARE" size={32} />
+                          <span className="item">BSHARE</span>
                         </TableCell>
                         <TableCell align="right">{roundAndFormatNumber(bShareCirculatingSupply, 2)}</TableCell>
                         <TableCell align="right">{roundAndFormatNumber(bShareTotalSupply, 2)}</TableCell>
                         <TableCell align="right">
                           ${bSharePriceInDollars ? bSharePriceInDollars : '-.--'} <br />
-                          {bSharePriceInBNB ? bSharePriceInBNB : '-.----'}
+                          {bSharePriceInBNB ? bSharePriceInBNB : '-.----'} BTC
                         </TableCell>
                         <TableCell align="right">
                           <Button
@@ -264,10 +265,10 @@ function Dashboard() {
                         </TableCell>
                       </TableRow>
 
-                      <TableRow>
+                      <TableRow className="line">
                         <TableCell component="th" scope="row">
-                          <TokenSymbol symbol="BBOND" style={{ height: '20px', width: '20px' }} />
-                          <span>BBOND</span>
+                          <TokenSymbol symbol="BBOND" size={32} />
+                          <span className="item">BBOND</span>
                         </TableCell>
                         <TableCell align="right">{roundAndFormatNumber(tBondCirculatingSupply, 2)}</TableCell>
                         <TableCell align="right">{roundAndFormatNumber(tBondTotalSupply, 2)}</TableCell>
@@ -292,25 +293,28 @@ function Dashboard() {
                 </TableContainer>
               </Grid>
 
-              <Grid item md={4}>
-                <p>Current Epoch</p>
-                <h2>{Number(currentEpoch)}</h2>
-                <Divider />
-                <p>Next Epoch in</p>
-                <Card className="align-left">
-                  <ProgressCountdown base={moment().toDate()} hideBar={true} deadline={to} description="Next Epoch" />
-                </Card>
-                <Divider />
+              <Grid item md={4}></Grid>
 
+              <Grid item md={2} className="epoch">
+                <p>Current Epoch</p>
+                <h2 className="line">{Number(currentEpoch)}</h2>
+                <p>Next Epoch in</p>
+                <ProgressCountdown
+                  base={moment().toDate()}
+                  hideBar={true}
+                  deadline={to}
+                  description="Next Epoch"
+                />{' '}
+                <Divider className="line" />
                 <div className="swap">
                   <p>
-                    Live TWAP: <span style={{ color: 'green' }}>{scalingFactor}</span>
+                    Live TWAP: <span className="green">{scalingFactor}</span>
                   </p>
                   <p>
-                    TVL: <span style={{ color: 'green' }}>${Number(TVL).toFixed(3)}</span>
+                    TVL: <span className="green">${Number(TVL).toFixed(3)}</span>
                   </p>
                   <p>
-                    Last Epoch TWAP: <span style={{ color: 'green' }}>1.22</span>
+                    Last Epoch TWAP: <span className="green">{scalingFactor}</span>
                   </p>
                 </div>
               </Grid>
@@ -318,103 +322,105 @@ function Dashboard() {
           </Card>
         </Grid>
         <Grid item md={8}>
-          <a
-            href="https://bombbshare.medium.com/the-bomb-cycle-how-to-print-forever-e89dc82c12e5"
-            target="_blank"
-            rel="noreferrer noopener"
-          >
-            Read Investment Strategy
-          </a>
-          <Button
-            style={{ marginLeft: '10px', marginBottom: '5px' }}
-            variant="contained"
-            href="https://app.bogged.finance/bsc/swap?tokenIn=0x7130d2A12B9BCbFAe4f2634d864A1Ee1Ce3Ead9c&tokenOut=0x522348779DCb2911539e76A1042aA922F9C47Ee3"
-          >
-            Invest Now
-          </Button>
-
-          <Grid container spacing={2}>
-            <Grid item md={6}>
-              <Button
-                style={{ marginLeft: '10px', width: '90%' }}
-                variant="contained"
-                href="https://discord.bomb.money/"
+          <Grid container spacing={1}>
+            <Grid item md={12} style={{ textAlign: 'right' }}>
+              <a
+                href="https://bombbshare.medium.com/the-bomb-cycle-how-to-print-forever-e89dc82c12e5"
                 target="_blank"
-                disableElevation
+                rel="noreferrer noopener"
+                className="ris-link"
               >
-                <IconDiscord
-                  style={{
-                    fill: 'blue',
-                    height: '20px',
-                    backgroundColor: 'rgba(255, 255, 255, 0.5)',
-                  }}
-                />
-                Chat on Discord
+                Read Investment Strategy
+              </a>
+            </Grid>
+            <Grid item md={12}>
+              <Button
+                href="https://app.bogged.finance/bsc/swap?tokenIn=0x7130d2A12B9BCbFAe4f2634d864A1Ee1Ce3Ead9c&tokenOut=0x522348779DCb2911539e76A1042aA922F9C47Ee3"
+                className="box-button"
+              >
+                Invest Now
               </Button>
             </Grid>
-            <Grid item md={6}>
-              <Button
-                style={{ marginLeft: '10px', width: '90%' }}
-                variant="contained"
-                href="https://docs.bomb.money/"
-                target="_blank"
-                disableElevation
-              >
-                <img src="" alt="" />
-                Read Docs
-              </Button>
+
+            <Grid container spacing={2}>
+              <Grid item md={6}>
+                <Button href="https://discord.bomb.money/" target="_blank" className="color-gray" disableElevation>
+                  <IconDiscord
+                    style={{
+                      fill: 'blue',
+                      height: '20px',
+                    }}
+                  />
+                  Chat on Discord
+                </Button>
+              </Grid>
+              <Grid item md={6}>
+                <Button href="https://docs.bomb.money/" target="_blank" className="color-gray" disableElevation>
+                  <img src="" alt="" />
+                  Read Docs
+                </Button>
+              </Grid>
             </Grid>
           </Grid>
-          <Card style={{ padding: '2vw', margin: '2vh' }}>
-            <img src="" alt="" />
-            <Grid container spacing={3}>
+
+          <Card className="transparent-card">
+            <Grid container>
+              <Grid item md={1}>
+                <TokenSymbol symbol="BSHARE" size={64} />
+              </Grid>
               <Grid item md={8}>
                 <h2>
                   Boardroom <span className="recommended">Recommended</span>
                 </h2>
-
                 <p>Stake BSHARE and earn BOMB every epoch</p>
               </Grid>
-              <Grid item md={4}>
-                TVL: $1,008,430
+              <Grid item md={3}>
+                TVL: ${TVL.toFixed(2)} {/*change later */}
               </Grid>
-              <Divider />
+              <Grid item md={12}>
+                <hr className="hr-line" />
+              </Grid>
             </Grid>
-
-            <Box style={{ textAlign: 'end' }}>
-              Total Staked: <img src="" alt="" /> {getDisplayBalance(totalStaked)}
-            </Box>
+            <br />
 
             <Grid container spacing={2}>
-              <Grid item md={2}>
-                Daily Returns: 2%
+              <Grid item md={8}></Grid>
+              <Grid item md={4}>
+                Total Staked: <TokenSymbol symbol="BSHARE" size={26} />
+                {getDisplayBalance(totalStaked)}
               </Grid>
               <Grid item md={2}>
-                Your Stake: {`${getDisplayBalance(stakedBalance)} ≈ ${tokenPriceInDollarsStake}`}
+                Daily Returns: <br /> {(boardroomAPR / 365).toFixed(2)}%
               </Grid>
               <Grid item md={2}>
-                Earned: {`${getDisplayBalance(earnings)} ≈ ${earnedInDollars}`}
+                Your Stake:
+                <br /> <TokenSymbol symbol="BSHARE" size={26} />
+                {getDisplayBalance(stakedBalance)} <br /> ≈ ${tokenPriceInDollarsStake}
+              </Grid>
+              <Grid item md={2}>
+                Earned: <br /> <TokenSymbol symbol="BOMB" size={26} />
+                {getDisplayBalance(earnings)} <br /> ≈ ${earnedInDollars}
               </Grid>
 
               <Grid item md={6}>
-                <Button variant="contained" style={{ marginLeft: '10px', marginBottom: '5px' }}>
-                  {'Deposit >>>'}
-                </Button>
+                <Button className="round-button">{'Deposit'}</Button>
                 <Button
                   disabled={stakedBalance.eq(0) || !canWithdraw}
                   onClick={onRedeem}
                   className={
-                    stakedBalance.eq(0) || !canWithdraw ? 'shinyButtonDisabledSecondary' : 'shinyButtonSecondary'
+                    stakedBalance.eq(0) || !canWithdraw
+                      ? 'round-button disabled' // disbaled
+                      : 'round-button' // enabled
                   }
                 >
                   Withdraw
                 </Button>
                 <Button
                   onClick={onReward}
-                  className={earnings.eq(0) || !canClaimReward ? 'shinyButtonDisabled' : 'shinyButton'}
+                  className={earnings.eq(0) || !canClaimReward ? 'round-button disabled' : 'round-button'}
                   disabled={earnings.eq(0) || !canClaimReward}
                 >
-                  Claim Reward
+                  Claim Rewards <TokenSymbol symbol="BSHARE" size={22} />
                 </Button>
               </Grid>
             </Grid>
@@ -422,8 +428,8 @@ function Dashboard() {
         </Grid>
 
         <Grid item md={4}>
-          <Card style={{ padding: '2vw', margin: '2vh', height: '70%' }}>
-            <h2>Latest News</h2>
+          <Card className="transparent-card latest-news-box">
+            <h2 className="latest-news">Latest News</h2>
           </Card>
         </Grid>
       </Grid>
@@ -431,11 +437,18 @@ function Dashboard() {
       <Divider />
 
       {/* Bombfarm */}
-      <Card style={{ padding: '2vw', margin: '2vh' }}>
-        <h3>Bomb Farms</h3>
-        <p>Stake your LP tokens in our farms to start earning $BSHARE</p>
-
-        <Button variant="contained">Claim All</Button>
+      <Card className="transparent-card">
+        <Grid container>
+          <Grid item md={10}>
+            <h3>Bomb Farms</h3>
+            <p>Stake your LP tokens in our farms to start earning $BSHARE</p>
+          </Grid>
+          <Grid item md={2}>
+            <Button className="round-button disabled" disabled>
+              Claim All <TokenSymbol symbol="BSHARE" size={22} />
+            </Button>
+          </Grid>
+        </Grid>
 
         {activeBanks
           .filter((bank) => bank.sectionInUI === 3)
@@ -448,12 +461,15 @@ function Dashboard() {
 
       {/* Bonds */}
 
-      <Card style={{ padding: '2vw', margin: '2vh' }}>
-        <img src="" alt="" />
-        <h3>Bonds</h3>
-        <p>BBOND can be purchased only on contraction periods, when TWAP of BOMB is below 1</p>
-
+      <Card className="transparent-card">
         <Grid container spacing={2}>
+          <Grid item md={1}>
+            <TokenSymbol symbol="BBOND" size={64}></TokenSymbol>
+          </Grid>
+          <Grid item md={11}>
+            <h3>Bonds</h3>
+            <p>BBOND can be purchased only on contraction periods, when TWAP of BOMB is below 1</p>
+          </Grid>
           <Grid item md={3}>
             <p>Current Price: (Bomb)^2</p>
 
@@ -464,29 +480,34 @@ function Dashboard() {
             <p>Available to redeem:</p>
 
             <h3>
-              <img src="" alt="" /> {getDisplayBalance(bondsPurchasable, 18, 4)}
+              <TokenSymbol symbol="BBOND" size={26}></TokenSymbol>
+              {getDisplayBalance(bondsPurchasable, 18, 4)}
             </h3>
           </Grid>
 
           <Grid item md={6}>
             <Grid container>
-              <Grid item md={12}>
-                <div>Purchase BBond Bomb is over peg</div>
+              <Grid item md={6}>
+                <div>Purchase BBond</div>
+                <div>Bomb is over peg</div>
               </Grid>
-              <Grid item md={12}>
-                {/* hello */}
+              <Grid item md={6}>
                 {!!account ? (
                   <>
                     {approveStatus !== ApprovalState.APPROVED ? (
                       <Button
-                        className="shinyButton"
+                        className={
+                          approveStatus === ApprovalState.PENDING || approveStatus === ApprovalState.UNKNOWN
+                            ? 'round-button disabled'
+                            : 'round-button'
+                        }
                         disabled={approveStatus === ApprovalState.PENDING || approveStatus === ApprovalState.UNKNOWN}
                         onClick={() => catchError(approve(), `Unable to approve BOMB`)}
                       >
                         {`Approve BOMB`}
                       </Button>
                     ) : (
-                      <Button className="shinyButton" onClick={onPresentPurchase}>
+                      <Button className="round-button" onClick={onPresentPurchase}>
                         Purchase
                       </Button>
                     )}
@@ -495,20 +516,26 @@ function Dashboard() {
                   <UnlockWallet />
                 )}
               </Grid>
+              <Grid item md={12}>
+                <hr className="hr-line"></hr>
+              </Grid>
             </Grid>
 
-            <Divider />
             <Grid container>
-              <Grid item md={12}>
+              <Grid item md={6}>
                 <div>Redeem Bomb</div>
               </Grid>
-              <Grid item md={12}>
+              <Grid item md={6}>
                 {!!account ? (
                   <>
                     {approveStatus !== ApprovalState.APPROVED &&
                     !(!bondStat || bondBalance.eq(0) || !isBondRedeemable) ? (
                       <Button
-                        className="shinyButton"
+                        className={
+                          approveStatus === ApprovalState.PENDING || approveStatus === ApprovalState.UNKNOWN
+                            ? 'round-button disabled'
+                            : 'round-button'
+                        }
                         disabled={approveStatus === ApprovalState.PENDING || approveStatus === ApprovalState.UNKNOWN}
                         onClick={() => catchError(approve(), `Unable to approve BBOND`)}
                       >
@@ -517,7 +544,7 @@ function Dashboard() {
                     ) : (
                       <Button
                         className={
-                          !bondStat || bondBalance.eq(0) || !isBondRedeemable ? 'shinyButtonDisabled' : 'shinyButton'
+                          !bondStat || bondBalance.eq(0) || !isBondRedeemable ? 'round-button disabled' : 'round-button'
                         }
                         onClick={onPresent}
                         disabled={!bondStat || bondBalance.eq(0) || !isBondRedeemable}

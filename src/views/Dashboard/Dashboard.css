@@ -3,6 +3,54 @@
     margin-right: 80%;
 }
 
+.head {
+    font-family: 'Nunito';
+    font-style: normal;
+    font-weight: 400;
+    font-size: 22px;
+}
+
+.table-head {
+    font-family: 'Nunito';
+    font-style: normal;
+    font-weight: 400;
+    font-size: 12px;
+}
+
+.table-values {
+    font-family: 'Nunito';
+    font-style: normal;
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.item {
+    font-family: 'Nunito';
+    font-style: normal;
+    font-weight: 400;
+    font-size: 12px;
+}
+
+.epoch {
+    font-family: 'Nunito';
+    font-style: normal;
+    font-weight: 600;
+    font-size: 18px;
+    text-align: center;
+}
+
+.swap {
+    font-family: 'Nunito';
+    font-style: normal;
+    font-weight: 300;
+    font-size: 14px;
+    line-height: 19px;
+}
+
+.green {
+    color: #00E8A2;
+}
+
 .recommended {
     font-family: 'Nunito';
     font-style: normal;
@@ -16,4 +64,97 @@
 
     background: rgba(0, 232, 162, 0.5);
     border-radius: 3px;
+}
+
+.transparent-card {
+    border-radius: 10px;
+    background-color: rgba(35,
+            40,
+            75,
+            0.75);
+    padding: 5px 60px;
+    backdrop-filter: blur(5px);
+    margin: 20px 0px;
+    border: 1px solid #728CDF;
+}
+
+.line {
+    border-bottom: 2px solid rgba(195, 197, 203, 0.25);
+}
+
+.hr-line {
+    border: 0.5px solid rgba(195, 197, 203, 0.25);
+}
+
+.ris-link {
+    font-family: 'Nunito';
+    font-style: normal;
+    font-weight: 600;
+    font-size: 16px;
+    text-decoration-line: underline;
+    font-feature-settings: 'liga' off;
+    color: #9EE6FF;
+}
+
+.box-button {
+    width: 100%;
+    padding: 1%;
+    background: radial-gradient(59345.13% 4094144349.28% at 39511.5% -2722397851.45%, rgba(0, 245, 171, 0.5) 0%, rgba(0, 173, 232, 0.5) 100%);
+    border-width: 0px;
+    font-family: 'Nunito';
+    font-style: normal;
+    font-weight: 800;
+    font-size: 24px;
+    color: #ffffff;
+    margin: 2px;
+    border-radius: 0%;
+}
+
+.color-gray {
+    width: 100%;
+    padding: 1%;
+    background: radial-gradient(59345.13% 4094144349.28% at 39511.5% -2722397851.45%, rgba(0, 245, 171, 0.5) 0%, rgba(0, 173, 232, 0.5) 100%);
+    border-width: 0px;
+    font-family: 'Nunito';
+    font-style: normal;
+    font-weight: 800;
+    font-size: 24px;
+    color: #ffffff;
+    margin: 2px;
+    border-radius: 0%;
+    background: rgba(255, 255, 255, 0.5);
+    border: 1px solid #728CDF;
+    color: black;
+}
+
+.latest-news {
+    font-family: 'Nunito';
+    font-style: normal;
+    font-weight: 700;
+    font-size: 22px;
+    color: #ffffff;
+}
+
+.latest-news-box {
+    border: 1px solid #728CDF;
+    height: 80%;
+}
+
+.round-button {
+    background-color: transparent;
+    border-radius: 2em;
+    border-style: solid;
+    border-color: #ffffff;
+    border-width: 1px;
+    padding: 1px 30px;
+    color: #ffffff;
+    width: max-content;
+    margin: 4px 2px;
+    margin-right: 1em;
+}
+
+.disabled {
+    background-color: #f0efef;
+    color: #818583 !important;
+    border-color: #0f0f0f;
 }
