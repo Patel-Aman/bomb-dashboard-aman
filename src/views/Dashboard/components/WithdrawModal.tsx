@@ -49,10 +49,6 @@ const WithdrawModal: React.FC<WithdrawModalProps> = ({ onConfirm, onDismiss, max
         <Button className="shinyButtonSecondary" onClick={() => onConfirm(val)}>
           Confirm
         </Button>
-        {/* <Button color="secondary" onClick={onDismiss}>Cancel</Button> */}
-
-        {/* <Button text="Cancel" variant="secondary" onClick={onDismiss} />
-        <Button text="Confirm" onClick={() => onConfirm(val)} /> */}
       </ModalActions>
     </Modal>
   );

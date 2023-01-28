@@ -1,31 +1,27 @@
 import React, { useMemo } from 'react';
 
+// UI
 import { Button, Grid } from '@material-ui/core';
-import { ThemeContext } from 'styled-components';
+import useModal from '../../../hooks/useModal';
+import WithdrawModal from './WithdrawModal';
+import TokenSymbol from '../../../components/TokenSymbol';
+import DepositModal from './DepositeModal';
 
+// hooks
 import useStatsForPool from '../../../hooks/useStatsForPool';
-import { Bank } from '../../../bomb-finance';
-import { getDisplayBalance } from '../../../utils/formatBalance';
 import useStakedBalance from '../../../hooks/useStakedBalance';
 import useStakedTokenPriceInDollars from '../../../hooks/useStakedTokenPriceInDollars';
 import useEarnings from '../../../hooks/useEarnings';
 import useBombStats from '../../../hooks/useBombStats';
 import useShareStats from '../../../hooks/usetShareStats';
 import useApprove, { ApprovalState } from '../../../hooks/useApprove';
-import { AddIcon, RemoveIcon } from '../../../components/icons';
-import FlashOnIcon from '@material-ui/icons/FlashOn';
-import IconButton from '../../../components/IconButton';
-import useModal from '../../../hooks/useModal';
-import WithdrawModal from './WithdrawModal'; // may give error
 import useWithdraw from '../../../hooks/useWithdraw';
-import ZapModal from './ZapModal';
-import DepositModal from './DepositeModal';
 import useStake from '../../../hooks/useStake';
-import useZap from '../../../hooks/useZap';
 import useTokenBalance from '../../../hooks/useTokenBalance';
-import { useContext } from 'react';
 import useRedeem from '../../../hooks/useRedeem';
-import TokenSymbol from '../../../components/TokenSymbol';
+
+import { Bank } from '../../../bomb-finance';
+import { getDisplayBalance } from '../../../utils/formatBalance';
 
 interface PoolsProps {
   bank: Bank;
@@ -33,14 +29,18 @@ interface PoolsProps {
 
 const Pools: React.FC<PoolsProps> = ({ bank }) => {
   const { onRedeem } = useRedeem(bank);
-  const { color: themeColor } = useContext(ThemeContext);
   const stakedBalance = useStakedBalance(bank.contract, bank.poolId);
   const [approveStatus, approve] = useApprove(bank.depositToken, bank.address);
   const { onWithdraw } = useWithdraw(bank);
   const { onStake } = useStake(bank);
-  const { onZap } = useZap(bank);
   const tokenBalance = useTokenBalance(bank.depositToken);
+  const bombStats = useBombStats();
+  const tShareStats = useShareStats();
+  const earnings = useEarnings(bank.contract, bank.earnTokenName, bank.poolId);
+  let statsOnPool = useStatsForPool(bank);
+  const stakedTokenPriceInDollars = useStakedTokenPriceInDollars(bank.depositTokenName, bank.depositToken);
 
+  // withdraw modal
   const [onPresentWithdraw, onDismissWithdraw] = useModal(
     <WithdrawModal
       max={stakedBalance}
@@ -54,18 +54,7 @@ const Pools: React.FC<PoolsProps> = ({ bank }) => {
     />,
   );
 
-  const [onPresentZap, onDissmissZap] = useModal(
-    <ZapModal
-      decimals={bank.depositToken.decimal}
-      onConfirm={(zappingToken, tokenName, amount) => {
-        if (Number(amount) <= 0 || isNaN(Number(amount))) return;
-        onZap(zappingToken, tokenName, amount);
-        onDissmissZap();
-      }}
-      tokenName={bank.depositTokenName}
-    />,
-  );
-
+  // deposit modal
   const [onPresentDeposit, onDismissDeposit] = useModal(
     <DepositModal
       max={tokenBalance}
@@ -79,27 +68,19 @@ const Pools: React.FC<PoolsProps> = ({ bank }) => {
     />,
   );
 
-  const bombStats = useBombStats();
-  const tShareStats = useShareStats();
-
-  const earnings = useEarnings(bank.contract, bank.earnTokenName, bank.poolId);
   const tokenStats = bank.earnTokenName === 'BSHARE' ? tShareStats : bombStats;
 
   const tokenPriceInDollarsEarn = useMemo(
     () => (tokenStats ? Number(tokenStats.priceInDollars).toFixed(2) : null),
     [tokenStats],
   );
-
-  const earnedInDollarsEarned = (Number(tokenPriceInDollarsEarn) * Number(getDisplayBalance(earnings))).toFixed(2);
-
-  const stakedTokenPriceInDollars = useStakedTokenPriceInDollars(bank.depositTokenName, bank.depositToken);
-
   const tokenPriceInDollars = useMemo(
     () => (stakedTokenPriceInDollars ? stakedTokenPriceInDollars : null),
     [stakedTokenPriceInDollars],
   );
 
-  let statsOnPool = useStatsForPool(bank);
+  // covert to dollars
+  const earnedInDollarsEarned = (Number(tokenPriceInDollarsEarn) * Number(getDisplayBalance(earnings))).toFixed(2);
   const earnedInDollars = (
     Number(tokenPriceInDollars) * Number(getDisplayBalance(stakedBalance, bank.depositToken.decimal))
   ).toFixed(2);
@@ -154,49 +135,28 @@ const Pools: React.FC<PoolsProps> = ({ bank }) => {
                     bank.closedForStaking ||
                     approveStatus === ApprovalState.PENDING ||
                     approveStatus === ApprovalState.UNKNOWN
-                      ? 'round-button' // active btn
-                      : 'round-button disbaled' // disable
+                      ? 'round-button disabled'
+                      : 'round-button'
                   }
                 >
-                  Deposit
+                  Approve
                 </Button>
               ) : (
-                <>
-                  <IconButton onClick={onPresentWithdraw}>
-                    <RemoveIcon />
-                  </IconButton>
-                  <IconButton
-                    disabled={
-                      bank.closedForStaking ||
-                      bank.depositTokenName === 'BOMB-BSHARE-LP' ||
-                      bank.depositTokenName === 'BOMB' ||
-                      bank.depositTokenName === 'BOMB-BTCB-LP' ||
-                      bank.depositTokenName === '80BOMB-20BTCB-LP' ||
-                      bank.depositTokenName === '80BSHARE-20WBNB-LP' ||
-                      bank.depositTokenName === 'BUSM-BUSD-LP' ||
-                      bank.depositTokenName === 'BBOND'
-                    }
-                    onClick={() => (bank.closedForStaking ? null : onPresentZap())}
-                  >
-                    <FlashOnIcon style={{ color: themeColor.grey[400] }} />
-                  </IconButton>
-                  <IconButton
-                    disabled={bank.closedForStaking}
-                    onClick={() => (bank.closedForStaking ? null : onPresentDeposit())}
-                  >
-                    <AddIcon />
-                  </IconButton>
-                </>
+                <Button className="round-button" onClick={() => (bank.closedForStaking ? null : onPresentDeposit())}>
+                  Deposit
+                </Button>
               )}
 
+              {/* active if stake is not zero */}
               <Button
-                onClick={onRedeem}
+                onClick={onPresentWithdraw}
                 className={Number(earnedInDollars) > 0 ? 'round-button' : 'round-button disabled'}
                 disabled={Number(earnedInDollars) > 0 ? false : true}
               >
                 Withdraw
               </Button>
 
+              {/* active if earned > 0 */}
               <Button
                 onClick={onRedeem}
                 className={Number(earnedInDollarsEarned) > 0 ? 'round-button' : 'round-button disabled'}

@@ -1,31 +1,28 @@
+// stylesheet
 import './Dashboard.css';
 
 import React, { useMemo, useCallback } from 'react';
+import { Helmet } from 'react-helmet';
+
+// UI
 import Page from '../../components/Page';
-import { createGlobalStyle } from 'styled-components';
 import TokenSymbol from '../../components/TokenSymbol';
+import { createGlobalStyle } from 'styled-components';
+import { Box, Button, Card, Grid, Divider, Table } from '@material-ui/core';
+import { TableBody, TableCell, TableContainer, TableHead, TableRow } from '@material-ui/core';
+import UnlockWallet from '../../components/UnlockWallet';
+import ExchangeModal from '../Bond/components/ExchangeModal';
+
+// hooks
 import useBombStats from '../../hooks/useBombStats';
 import useBondStats from '../../hooks/useBondStats';
 import usebShareStats from '../../hooks/usebShareStats';
-import { roundAndFormatNumber } from '../../0x';
-import MetamaskFox from '../../assets/img/metamask-fox.svg';
-import { Box, Button, Card, Grid, Divider, Table } from '@material-ui/core';
-import { TableBody, TableCell, TableContainer, TableHead, TableRow } from '@material-ui/core';
 import useCurrentEpoch from '../../hooks/useCurrentEpoch';
 import useBondsPurchasable from '../../hooks/useBondsPurchasable';
-import { getDisplayBalance } from '../../utils/formatBalance';
 import useBombFinance from '../../hooks/useBombFinance';
 import useCashPriceInEstimatedTWAP from '../../hooks/useCashPriceInEstimatedTWAP';
-import ProgressCountdown from './components/ProgressCountdown';
 import useTreasuryAllocationTimes from '../../hooks/useTreasuryAllocationTimes';
-import moment from 'moment';
 import useTotalValueLocked from '../../hooks/useTotalValueLocked';
-import { Helmet } from 'react-helmet';
-import HomeImage from '../../assets/img/background.jpg';
-import { ReactComponent as IconDiscord } from '../../assets/img/discord.svg';
-// import useStatsForPool from '../../hooks/useStatsForPool';
-// import useBanks from '../../hooks/useBanks';
-// import useRedeem from '../../hooks/useRedeem';
 import useTotalStakedOnBoardroom from '../../hooks/useTotalStakedOnBoardroom';
 import useEarningsOnBoardroom from '../../hooks/useEarningsOnBoardroom';
 import useStakedBalanceOnBoardroom from '../../hooks/useStakedBalanceOnBoardroom';
@@ -35,18 +32,26 @@ import useClaimRewardCheck from '../../hooks/boardroom/useClaimRewardCheck';
 import useWithdrawCheck from '../../hooks/boardroom/useWithdrawCheck';
 import useRedeemOnBoardroom from '../../hooks/useRedeemOnBoardroom';
 import useBanks from '../../hooks/useBanks';
+import useCashPriceInLastTWAP from '../../hooks/useCashPriceInLastTWAP';
+import useTokenBalance from '../../hooks/useTokenBalance';
+import useApprove, { ApprovalState } from '../../hooks/useApprove';
+import useModal from '../../hooks/useModal';
+import useCatchError from '../../hooks/useCatchError';
+import useFetchBoardroomAPR from '../../hooks/useFetchBoardroomAPR';
+
+// images
+import MetamaskFox from '../../assets/img/metamask-fox.svg';
+import { ReactComponent as IconDiscord } from '../../assets/img/discord.svg';
+import HomeImage from '../../assets/img/background.jpg';
+
+import { roundAndFormatNumber } from '../../0x';
+import { getDisplayBalance } from '../../utils/formatBalance';
+import ProgressCountdown from './components/ProgressCountdown';
+import moment from 'moment';
 import Pools from './components/pools';
-import useCashPriceInLastTWAP from '../../hooks/useCashPriceInLastTWAP'; // maybe important later
 import { BOND_REDEEM_PRICE, BOND_REDEEM_PRICE_BN } from '../../bomb-finance/constants';
 import { useTransactionAdder } from '../../state/transactions/hooks';
-import useTokenBalance from '../../hooks/useTokenBalance';
 import useWallet from 'use-wallet';
-import useApprove, { ApprovalState } from '../../hooks/useApprove';
-import UnlockWallet from '../../components/UnlockWallet';
-import useCatchError from '../../hooks/useCatchError';
-import useModal from '../../hooks/useModal';
-import ExchangeModal from '../Bond/components/ExchangeModal';
-import useFetchBoardroomAPR from '../../hooks/useFetchBoardroomAPR';
 
 const BackgroundImage = createGlobalStyle`
   body {
@@ -59,11 +64,9 @@ const BackgroundImage = createGlobalStyle`
 const TITLE = 'bomb.money | Dashboard';
 
 function Dashboard() {
-  // here
   const bombFinance = useBombFinance();
   const bondsPurchasable = useBondsPurchasable();
   const bondStat = useBondStats();
-  const isBondPurchasable = useMemo(() => Number(bondStat?.tokenInFtm) < 1.01, [bondStat]);
   const {
     contracts: { Treasury },
   } = useBombFinance();
@@ -72,55 +75,9 @@ function Dashboard() {
   const [approveStatus, approve] = useApprove(bombFinance.BOMB, Treasury.address);
   const catchError = useCatchError();
   const balance = useTokenBalance(bombFinance.BBOND);
-
-  let [onPresent, onDismiss] = useModal(
-    <ExchangeModal
-      title="Purchase"
-      description={
-        !isBondPurchasable
-          ? 'BOMB is over peg'
-          : getDisplayBalance(bondsPurchasable, 18, 4) + ' BBOND available for purchase'
-      }
-      max={balance}
-      onConfirm={(value) => {
-        handleRedeemBonds(value);
-        onDismiss();
-      }}
-      action="Purchase"
-      tokenName="BOMB"
-    />,
-  );
-  const onPresentPurchase = onPresent;
-
-  [onPresent, onDismiss] = useModal(
-    <ExchangeModal
-      title="Redeem"
-      description={`${getDisplayBalance(bondBalance)} BBOND Available in wallet`}
-      max={balance}
-      onConfirm={(value) => {
-        handleRedeemBonds(value);
-        onDismiss();
-      }}
-      action="Redeem"
-      tokenName="BBOND"
-    />,
-  );
-
   const [banks] = useBanks();
   const cashPrice = useCashPriceInLastTWAP();
   const addTransaction = useTransactionAdder();
-
-  const isBondRedeemable = useMemo(() => cashPrice.gt(BOND_REDEEM_PRICE_BN), [cashPrice]);
-
-  const handleRedeemBonds = useCallback(
-    async (amount) => {
-      const tx = await bombFinance.redeemBonds(amount);
-      addTransaction(tx, { summary: `Redeem ${amount} BBOND` });
-    },
-    [bombFinance, addTransaction],
-  );
-
-  const activeBanks = banks.filter((bank) => !bank.finished);
   const bombStats = useBombStats();
   const bShareStats = usebShareStats();
   const tBondStats = useBondStats();
@@ -130,15 +87,27 @@ function Dashboard() {
   const earnings = useEarningsOnBoardroom();
   const stakedBalance = useStakedBalanceOnBoardroom();
   const boardroomAPR = useFetchBoardroomAPR();
-
   const { onReward } = useHarvestFromBoardroom();
   const { onRedeem } = useRedeemOnBoardroom();
   const canClaimReward = useClaimRewardCheck();
   const canWithdraw = useWithdrawCheck();
-
+  const stakedTokenPriceInDollars = useStakedTokenPriceInDollars('BSHARE', bombFinance.BSHARE);
   const currentEpoch = useCurrentEpoch();
   const { to } = useTreasuryAllocationTimes();
 
+  const handleRedeemBonds = useCallback(
+    async (amount) => {
+      const tx = await bombFinance.redeemBonds(amount);
+      addTransaction(tx, { summary: `Redeem ${amount} BBOND` });
+    },
+    [bombFinance, addTransaction],
+  );
+
+  // filter and store only active banks
+  const activeBanks = banks.filter((bank) => !bank.finished);
+
+  const isBondPurchasable = useMemo(() => Number(bondStat?.tokenInFtm) < 1.01, [bondStat]);
+  const isBondRedeemable = useMemo(() => cashPrice.gt(BOND_REDEEM_PRICE_BN), [cashPrice]);
   const scalingFactor = useMemo(() => (cashStat ? Number(cashStat.priceInDollars).toFixed(4) : null), [cashStat]);
   const bombCirculatingSupply = useMemo(() => (bombStats ? String(bombStats.circulatingSupply) : null), [bombStats]);
   const bShareCirculatingSupply = useMemo(
@@ -177,8 +146,6 @@ function Dashboard() {
     [bombStats],
   );
 
-  const stakedTokenPriceInDollars = useStakedTokenPriceInDollars('BSHARE', bombFinance.BSHARE);
-
   const tokenPriceInDollarsStake = useMemo(
     () =>
       stakedTokenPriceInDollars
@@ -189,6 +156,41 @@ function Dashboard() {
 
   const earnedInDollars = (Number(tokenPriceInDollars) * Number(getDisplayBalance(earnings))).toFixed(2);
 
+  // purchase button modal
+  let [onPresent, onDismiss] = useModal(
+    <ExchangeModal
+      title="Purchase"
+      description={
+        !isBondPurchasable
+          ? 'BOMB is over peg'
+          : getDisplayBalance(bondsPurchasable, 18, 4) + ' BBOND available for purchase'
+      }
+      max={balance}
+      onConfirm={(value) => {
+        handleRedeemBonds(value);
+        onDismiss();
+      }}
+      action="Purchase"
+      tokenName="BOMB"
+    />,
+  );
+  const onPresentPurchase = onPresent;
+
+  // redeem button modal
+  [onPresent, onDismiss] = useModal(
+    <ExchangeModal
+      title="Redeem"
+      description={`${getDisplayBalance(bondBalance)} BBOND Available in wallet`}
+      max={balance}
+      onConfirm={(value) => {
+        handleRedeemBonds(value);
+        onDismiss();
+      }}
+      action="Redeem"
+      tokenName="BBOND"
+    />,
+  );
+
   return (
     <Page>
       <Helmet>
@@ -196,6 +198,7 @@ function Dashboard() {
       </Helmet>
       <BackgroundImage />
 
+      {/* bomb finance summary section */}
       <Grid container spacing={3}>
         <Grid item xs={12} sm={12}>
           <Card className="transparent-card">
@@ -321,7 +324,11 @@ function Dashboard() {
             </Grid>
           </Card>
         </Grid>
+        {/* Bomb finance sumarry section end */}
+
         <Grid item md={8}>
+          {/* buttons */}
+
           <Grid container spacing={1}>
             <Grid item md={12} style={{ textAlign: 'right' }}>
               <a
@@ -363,6 +370,8 @@ function Dashboard() {
             </Grid>
           </Grid>
 
+          {/* Boardroom section */}
+
           <Card className="transparent-card">
             <Grid container>
               <Grid item md={1}>
@@ -375,7 +384,7 @@ function Dashboard() {
                 <p>Stake BSHARE and earn BOMB every epoch</p>
               </Grid>
               <Grid item md={3}>
-                TVL: ${TVL.toFixed(2)} {/*change later */}
+                TVL: ${TVL.toFixed(2)}
               </Grid>
               <Grid item md={12}>
                 <hr className="hr-line" />
@@ -427,6 +436,8 @@ function Dashboard() {
           </Card>
         </Grid>
 
+        {/* latest news section */}
+
         <Grid item md={4}>
           <Card className="transparent-card latest-news-box">
             <h2 className="latest-news">Latest News</h2>
@@ -436,7 +447,8 @@ function Dashboard() {
 
       <Divider />
 
-      {/* Bombfarm */}
+      {/* Bombfarm section */}
+
       <Card className="transparent-card">
         <Grid container>
           <Grid item md={10}>
@@ -450,6 +462,8 @@ function Dashboard() {
           </Grid>
         </Grid>
 
+        {/* bomb farm pools displays all available pools */}
+
         {activeBanks
           .filter((bank) => bank.sectionInUI === 3)
           .map((bank) => (
@@ -459,7 +473,7 @@ function Dashboard() {
           ))}
       </Card>
 
-      {/* Bonds */}
+      {/* Bonds section */}
 
       <Card className="transparent-card">
         <Grid container spacing={2}>
@@ -492,6 +506,8 @@ function Dashboard() {
                 <div>Bomb is over peg</div>
               </Grid>
               <Grid item md={6}>
+                {/* purchase button active only when approved else connect wallet */}
+
                 {!!account ? (
                   <>
                     {approveStatus !== ApprovalState.APPROVED ? (
@@ -526,6 +542,9 @@ function Dashboard() {
                 <div>Redeem Bomb</div>
               </Grid>
               <Grid item md={6}>
+                {/* Redeem button active only when approved
+                else check if bond is redeemable if not the show reason */}
+
                 {!!account ? (
                   <>
                     {approveStatus !== ApprovalState.APPROVED &&
