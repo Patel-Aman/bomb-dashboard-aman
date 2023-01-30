@@ -495,7 +495,7 @@ function Dashboard() {
 
             <h3>
               <TokenSymbol symbol="BBOND" size={26}></TokenSymbol>
-              {getDisplayBalance(bondsPurchasable, 18, 4)}
+              {bondBalance}
             </h3>
           </Grid>
 

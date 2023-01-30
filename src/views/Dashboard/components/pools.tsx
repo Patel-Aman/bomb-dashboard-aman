@@ -106,7 +106,7 @@ const Pools: React.FC<PoolsProps> = ({ bank }) => {
         </Grid>
         <Grid container spacing={4}>
           <Grid item md={2}>
-            Daily Returns: <br /> {statsOnPool?.dailyAPR ? '0.00' : statsOnPool?.dailyAPR}%
+            Daily Returns: <br /> {statsOnPool?.dailyAPR ? statsOnPool?.dailyAPR : '0.00'}%
           </Grid>
 
           <Grid item md={2}>
