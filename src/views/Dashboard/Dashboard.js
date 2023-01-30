@@ -495,7 +495,7 @@ function Dashboard() {
 
             <h3>
               <TokenSymbol symbol="BBOND" size={26}></TokenSymbol>
-              {bondBalance}
+              {Number(bondBalance).toFixed(3)}
             </h3>
           </Grid>
 
